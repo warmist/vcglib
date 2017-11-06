@@ -24,6 +24,7 @@
 #define __VCG_TRI_UPDATE_HOLE
 
 #include <vcg/complex/algorithms/clean.h>
+#include <atomic>
 
 // This file contains three Ear Classes
 // - TrivialEar
@@ -525,7 +526,8 @@ template<class EAR>
     }
 
     template<class EAR>
-    static int EarCuttingFill(MESH &m, int sizeHole, bool Selected = false, CallBackPos *cb=0)
+    static int EarCuttingFill(MESH &m, int sizeHole, bool Selected = false, CallBackPos *cb=0,
+      const std::atomic<bool>* cancel_flag=NULL)
     {
       std::vector< Info > vinfo;
       GetInfo(m, Selected,vinfo);
@@ -545,6 +547,8 @@ template<class EAR>
           holeCnt++;
           FillHoleEar< EAR >(m, (*ith).p,facePtrToBeUpdated);
         }
+        if (cancel_flag && cancel_flag->load())
+          return holeCnt;
       }
       return holeCnt;
     }
@@ -554,7 +558,8 @@ template<class EAR>
 /// It returns the number of filled holes.
 
 template<class EAR>
-    static int EarCuttingIntersectionFill(MESH &m, const int maxSizeHole, bool Selected, CallBackPos *cb=0)
+    static int EarCuttingIntersectionFill(MESH &m, const int maxSizeHole, bool Selected, CallBackPos *cb=0,
+      const std::atomic<bool>* cancel_flag=NULL)
     {
       std::vector<Info > vinfo;
       GetInfo(m, Selected,vinfo);
@@ -596,6 +601,8 @@ template<class EAR>
 
           FillHoleEar<EAR >(m, ith->p,facePtrToBeUpdated);
           EAR::AdjacencyRing().clear();
+          if (cancel_flag && cancel_flag->load())
+            return holeCnt;
         }
       }
       return holeCnt;

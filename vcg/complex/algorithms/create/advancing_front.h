@@ -28,6 +28,7 @@
 #include <list>
 #include <vcg/complex/algorithms/update/topology.h>
 #include <vcg/complex/algorithms/update/flag.h>
+#include <atomic>
 
 namespace vcg {
   namespace tri {
@@ -98,7 +99,7 @@ template <class MESH> class AdvancingFront {
   }
   virtual ~AdvancingFront() {}
 
-  void BuildMesh(CallBackPos call = NULL, int interval = 512)
+  void BuildMesh(CallBackPos call = NULL, int interval = 512,const std::atomic<bool>* cancel_flag=NULL)
   {
     float finalfacesext = mesh.vert.size() * 2.0f;
     if(call) call(0, "Advancing front");
@@ -113,6 +114,8 @@ template <class MESH> class AdvancingFront {
             int perc = (int) (100.0f * rap);
             (*call)(perc,"Adding Faces");
         }
+        if (cancel_flag && cancel_flag->load())
+          return;
       }
     }
   }

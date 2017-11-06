@@ -51,6 +51,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
   float max_edge;        //min length of an edge
   float max_angle;       //max angle between 2 faces (cos(angle) actually)
 
+  bool use_normals;      //use point normal in seeding
  public:
 
     // if radius ==0 an autoguess for the ball pivoting radius is attempted
@@ -60,7 +61,7 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
                float minr = 0.2, float angle = M_PI/2):
 
     AdvancingFront<MESH>(_mesh), radius(_radius),
-    min_edge(minr), max_edge(1.8), max_angle(cos(angle)),
+    min_edge(minr), max_edge(1.8), max_angle(cos(angle)), use_normals(false),
     last_seed(-1) {
 
     //compute bbox
@@ -160,13 +161,16 @@ template <class MESH> class BallPivoting: public AdvancingFront<MESH> {
             if(d0 < min_edge || d0 > max_edge) continue;
 
             Point3x normal = (p1 - p0)^(p2 - p0);
-            if(normal.dot(p0 - baricenter) < 0) continue;
-/*            if(use_normals) {
+
+            if(use_normals) {
               if(normal * vv0->N() < 0) continue;
               if(normal * vv1->N() < 0) continue;
               if(normal * vv2->N() < 0) continue;
-            }*/
-
+            }
+            else
+            {
+              if(normal.dot(p0 - baricenter) < 0) continue;
+            }
             if(!FindSphere(p0, p1, p2, center)) {
               continue;
             }
